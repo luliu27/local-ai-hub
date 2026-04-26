@@ -1,0 +1,72 @@
+{
+  "skill_name": "web-to-epub",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "ghost-blog-article",
+      "prompt": "I want to read this article offline. Save the epub from https://vector.news/claudes-compute-crunch/",
+      "expected_output": "A valid EPUB file named 'claudes-compute-crunch.epub' with full article text and embedded images, clean output in current directory, no stray image folders.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "EPUB file is created and is a valid EPUB archive",
+          "passed": "",
+          "evidence": ""
+        },
+        {
+          "text": "EPUB contains at least 2 images in the manifest",
+          "passed": "",
+          "evidence": ""
+        },
+        {
+          "text": "XHTML article body contains all significant paragraphs from the source (at least 10 <p> tags)",
+          "passed": "",
+          "evidence": ""
+        },
+        {
+          "text": "No stray download directories remain (images/) after completion",
+          "passed": "",
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "eval_name": "url-given-directly",
+      "prompt": "Convert this URL into an epub: https://vector.news/claudes-compute-crunch/ — I want to read it in Apple Books later.",
+      "expected_output": "EPUB created with article title as filename, content fully extracted, images embedded, clean workspace.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "EPUB is generated with valid structure (mimetype, container.xml, content.opf present)",
+          "passed": "",
+          "evidence": ""
+        },
+        {
+          "text": "Title is correctly extracted from page source",
+          "passed": "",
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "no-url-provided",
+      "prompt": "Convert a webpage to epub for me.",
+      "expected_output": "User is asked to provide the URL since none was given. EPUB is NOT created.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "No EPUB file is created when no URL is provided",
+          "passed": "",
+          "evidence": ""
+        },
+        {
+          "text": "User is prompted for a URL or asked to clarify which page to convert",
+          "passed": "",
+          "evidence": ""
+        }
+      ]
+    }
+  ]
+}
