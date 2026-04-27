@@ -314,9 +314,13 @@ groups:
     exclusive: true
     members:
       - "qwen3.5-9b"
-      - "qwen3.5-27b"
-      - "qwen3.5-27b-thinking"
-      - "qwen3.5-35b-a3b-thinking"
+      - "qwen3.6-27b"
+      - "qwen3.6-27b-thinking"
+      - "qwen3.6-27b-coding"
+      - "qwen3.6-35b-a3b-thinking"
+      - "qwen3.6-35b-a3b-thinking-coding"
+      - "qwen3.6-35b-a3b-instruct-general"
+      - "qwen3.6-35b-a3b-instruct-reasoning"
       - "gpt-oss-20b"
       - "gemma4-31b"
 
