@@ -128,6 +128,17 @@ def main():
             for el in content_section.find_all(tag):
                 el.unwrap()
 
+        # Replace <picture>/<source> with a plain <img element
+        # EPUB readers (especially Apple Books) don't support picture/source
+        for picture in content_section.find_all("picture"):
+            img = picture.find("img")
+            if img:
+                for source in picture.find_all("source"):
+                    source.decompose()
+                for attr in ["srcset", "sizes"]:
+                    img.attrs.pop(attr, None)
+                picture.unwrap()
+
         for iframe in content_section.find_all("iframe"):
             iframe.decompose()
 
@@ -198,7 +209,7 @@ def main():
             )
             book.add_item(epub_img)
 
-        book.spine = ["nav", chapter]
+        book.spine = [chapter]
         epub.write_epub(OUTPUT, book, {})
 
         print(f"Title: {TITLE}")
