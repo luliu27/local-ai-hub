@@ -242,6 +242,55 @@ models:
       - "qwen3.6-35b-a3b-instruct-reasoning"
     ttl: 0
 
+  qwen3.6-35b-a3b-mtp-thinking-general:
+    cmd: >
+      ${llama_server_bin} --port ${PORT}
+      -hf unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q6_K_XL
+      --ctx-size ${default_ctx}
+      --threads ${threads}
+      ${cache_prompt} -ub ${ub}
+      ${jinja}
+      --reasoning on
+      --repeat-penalty ${repeat_penalty}
+      --presence_penalty 1.5
+      --temp 1.0
+      --top-p 0.95
+      --top-k 20
+      --min-p 0.00
+      -ngl 99
+      -fa on
+      -np 1
+      --spec-type draft-mtp --spec-draft-n-max 2
+    useModelName: "qwen3.6-35b-a3b-mtp-thinking-general"
+    aliases:
+      - "qwen3.6-35b-a3b-mtp-thinking-general"
+    ttl: 0
+
+  qwen3.6-35b-a3b-mtp-thinking-coding:
+    cmd: >
+      ${llama_server_bin} --port ${PORT}
+      -hf unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q6_K_XL
+      --ctx-size ${default_ctx}
+      --threads ${threads}
+      ${cache_prompt} -ub ${ub}
+      ${jinja}
+      --reasoning on
+      --chat-template-kwargs '{"preserve_thinking":true}'
+      --repeat-penalty ${repeat_penalty}
+      --presence_penalty 0.0
+      --temp 0.6
+      --top-p 0.95
+      --top-k 20
+      --min-p 0.00
+      -ngl 99
+      -fa on
+      -np 1
+      --spec-type draft-mtp --spec-draft-n-max 2
+    useModelName: "qwen3.6-35b-a3b-mtp-thinking-coding"
+    aliases:
+      - "qwen3.6-35b-a3b-mtp-thinking-coding"
+    ttl: 0
+
   gemma4-31b:
     cmd: >
       ${llama_server_bin} --port ${PORT}
@@ -317,8 +366,10 @@ groups:
       - "qwen3.6-27b"
       - "qwen3.6-27b-thinking"
       - "qwen3.6-27b-coding"
-      - "qwen3.6-35b-a3b-thinking"
+      - "qwen3.6-35b-a3b-thinking-general"
+      - "qwen3.6-35b-a3b-mtp-thinking-general"
       - "qwen3.6-35b-a3b-thinking-coding"
+      - "qwen3.6-35b-a3b-mtp-thinking-coding"
       - "qwen3.6-35b-a3b-instruct-general"
       - "qwen3.6-35b-a3b-instruct-reasoning"
       - "gpt-oss-20b"
