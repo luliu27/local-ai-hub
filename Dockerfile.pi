@@ -1,0 +1,30 @@
+# Usage:
+#   docker run -it --rm \
+#     -v ~/.pi/agent/docker-models.json:/root/.pi/agent/models.json \
+#     -v ~/.pi/agent:/root/.pi/agent \
+#     -v "$PWD:/workspace" \
+#     pi-sandbox
+#
+# Build:
+#   docker build -f Dockerfile.pi -t pi-sandbox .
+
+FROM node:24-trixie-slim
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends bash ca-certificates curl git ripgrep \
+  && rm -rf /var/lib/apt/lists/*
+RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+RUN pi install npm:pi-venice \
+  && pi install npm:pi-subagents \
+  && pi install npm:pi-web-access
+
+# Install RTK (Rust Token Killer) for token-optimized command outputs
+# The install script resolves the latest release version automatically.
+# Pin to a specific version by setting RTK_VERSION (e.g., RTK_VERSION=0.42.4)
+RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh \
+  && export PATH="/root/.local/bin:$PATH" \
+  && rtk init -g --agent pi
+ENV PATH="/root/.local/bin:$PATH"
+
+WORKDIR /workspace
+ENTRYPOINT ["pi"]
