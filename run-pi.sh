@@ -1,15 +1,36 @@
 #!/usr/bin/env bash
-# Usage: run-pi.sh --skills /path/to/skills
+# Usage: run-pi.sh [--auth path/to/auth.json] [--sessions path/to/sessions] [--skills /path/to/skills]
 #
 # Options:
-#   --skills /path/to/skills    Mount a local skills directory into the container
+#   --auth     path/to/auth.json          Path to auth.json (default: ~/.pi/agent/auth.json)
+#   --sessions path/to/sessions           Path to sessions directory (default: ~/.pi/agent/sessions)
+#   --skills /path/to/skills             Mount a local skills directory into the container
 
 set -euo pipefail
 
+MODEL_CONFIG="$PWD/configs/pi-docker-models.json"
+AUTH_DIR="$HOME/.pi/agent/auth.json"
+SESSIONS_DIR="$HOME/.pi/agent/sessions"
 SKILLS_DIR=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --auth)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --auth requires a path argument" >&2
+        exit 1
+      fi
+      AUTH_DIR="$2"
+      shift 2
+      ;;
+    --sessions)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --sessions requires a path argument" >&2
+        exit 1
+      fi
+      SESSIONS_DIR="$2"
+      shift 2
+      ;;
     --skills)
       if [[ -z "${2:-}" ]]; then
         echo "Error: --skills requires a path argument" >&2
@@ -19,7 +40,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      echo "Error: unknown argument '$1'. Usage: $0 --skills /path/to/skills" >&2
+      echo "Error: unknown argument '$1'. Usage: $0 [--auth /path/to/auth.json] [--sessions /path/to/sessions] [--skills /path/to/skills]" >&2
       exit 1
       ;;
   esac
@@ -45,9 +66,9 @@ fi
 
 # Common bind mounts (from Dockerfile usage comments)
 CMD+=(
-  -v ~/.pi/agent/docker-models.json:/root/.pi/agent/models.json
-  -v ~/.pi/agent/auth.json:/root/.pi/agent/auth.json
-  -v ~/.pi/agent/sessions:/root/.pi/agent/sessions
+  -v "${MODEL_CONFIG}:/root/.pi/agent/models.json"
+  -v "${AUTH_DIR}:/root/.pi/agent/auth.json"
+  -v "${SESSIONS_DIR}:/root/.pi/agent/sessions"
   -v "$PWD:/workspace"
 )
 

@@ -1,6 +1,6 @@
 # Usage:
 #   docker run -it --rm \
-#     -v ~/.pi/agent/docker-models.json:/root/.pi/agent/models.json \
+#     -v "$PWD/configs/pi-docker-models.json:/root/.pi/agent/models.json" \
 #     -v ~/.pi/agent/auth.json:/root/.pi/agent/auth.json \
 #     -v ~/.pi/agent/sessions:/root/.pi/agent/sessions \
 #     -v "$PWD:/workspace" \

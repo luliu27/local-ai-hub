@@ -7,13 +7,14 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 ```
 ├── configs/            # llama-swap & opencode configuration
 │   ├── llama-swap-config.yaml
-│   └── opencode.jsonc
+│   ├── opencode.jsonc
+│   └── pi-docker-models.json
 ├── logs/               # llama-swap access/runtime logs
 ├── skills/             # Custom pi-coding-agent skills
 │   └── web-to-epub/
 ├── Dockerfile.pi       # pi-sandbox container image definition
 ├── llamaswap.sh        # llama-swap proxy lifecycle script
-├── run-pi.sh           # Docker sandbox launcher with --skills mount support
+├── run-pi.sh           # Docker sandbox launcher with --auth, --sessions, and --skills options
 ├── .gitignore
 └── README.md
 ```
@@ -96,15 +97,18 @@ docker build -f Dockerfile.pi -t pi-sandbox .
 
 ```bash
 # Standard — mounts ~/.pi config + workspace as /workspace
-docker run -it --rm \
-  -v ~/.pi/agent/docker-models.json:/root/.pi/agent/models.json \
-  -v ~/.pi/agent/auth.json:/root/.pi/agent/auth.json \
-  -v ~/.pi/agent/sessions:/root/.pi/agent/sessions \
-  -v "$PWD:/workspace" \
-  pi-sandbox
+./run-pi.sh
 ```
 
 The container's `ENTRYPOINT` is `pi`, so everything runs as a pi session. Connects to the local llama-swap proxy at `127.0.0.1:1235/v1` by default.
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--auth /path/to/auth.json` | `$HOME/.pi/agent/auth.json` | Path to API auth credentials |
+| `--sessions /path/to/sessions` | `$HOME/.pi/agent/sessions` | Path to persistent session history |
+| `--skills /path/to/skills` | _(none)_ | Mount external skills into the container |
 
 ### Overriding Skills at Runtime
 
@@ -115,13 +119,20 @@ The container's `ENTRYPOINT` is `pi`, so everything runs as a pi session. Connec
 
 This symlinks each subdirectory under `/path/to/skills/` into `/root/.pi/agent/skills/`, allowing you to test or use custom skills without rebuilding the image.
 
+### Overriding Auth or Sessions at Runtime
+
+```bash
+# Use a different auth file and sessions directory
+./run-pi.sh --auth /custom/path/auth.json --sessions /custom/path/sessions
+```
+
 ### Bind Mount Reference
 
 | Host Path | Container Path | Purpose |
 |-----------|---------------|---------|
-| `~/.pi/agent/docker-models.json` | `/root/.pi/agent/models.json` | Hugging Face model cache index (read-only) |
-| `~/.pi/agent/auth.json` | `/root/.pi/agent/auth.json` | API auth credentials for provider access |
-| `~/.pi/agent/sessions` | `/root/.pi/agent/sessions` | Persistent pi session history across runs |
+| `$PWD/configs/pi-docker-models.json` | `/root/.pi/agent/models.json` | Model provider configuration (llamaswap) |
+| `--auth` (default: `$HOME/.pi/agent/auth.json`) | `/root/.pi/agent/auth.json` | API auth credentials for provider access |
+| `--sessions` (default: `$HOME/.pi/agent/sessions`) | `/root/.pi/agent/sessions` | Persistent pi session history across runs |
 | `$PWD` | `/workspace` | Working directory — where `pi` operates |
 
 > **Note:** `settings.json` is baked into the image at build time. To change packages or provider defaults, rebuild the Dockerfile. Auth, model cache, and sessions are overridable via bind mounts.

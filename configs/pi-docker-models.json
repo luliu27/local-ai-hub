@@ -1,0 +1,23 @@
+{
+	"providers": {
+		"llamaswap": {
+			"baseUrl": "http://host.docker.internal:1235/v1",
+			"api": "openai-completions",
+			"apiKey": "llamaswap",
+			"models": [
+				{
+					"id": "qwen3.5-2b",
+					"name": "Qwen 3.5 2B"
+				},
+				{
+					"id": "qwen3.6-27b-coding",
+					"name": "Qwen 3.6 27B coding"
+				},
+				{
+					"id": "qwen3.6-35b-a3b-instruct-general",
+					"name": "Qwen 3.6 35B A3B instruct general"
+				}
+			]
+		}
+	}
+}
