@@ -1,9 +1,14 @@
 # Usage:
 #   docker run -it --rm \
 #     -v ~/.pi/agent/docker-models.json:/root/.pi/agent/models.json \
-#     -v ~/.pi/agent:/root/.pi/agent \
+#     -v ~/.pi/agent/auth.json:/root/.pi/agent/auth.json \
+#     -v ~/.pi/agent/sessions:/root/.pi/agent/sessions \
 #     -v "$PWD:/workspace" \
 #     pi-sandbox
+#
+# Note: settings.json is baked into the image. To customize packages,
+# edit the Dockerfile and rebuild. Other config (models, auth) can still
+# be overridden via bind mounts.
 #
 # Build:
 #   docker build -f Dockerfile.pi -t pi-sandbox .
@@ -14,9 +19,31 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends bash ca-certificates curl git ripgrep \
   && rm -rf /var/lib/apt/lists/*
 RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-RUN pi install npm:pi-venice \
-  && pi install npm:pi-subagents \
-  && pi install npm:pi-web-access
+
+# Install packages directly into the managed directory so they survive at runtime.
+# We write settings.json inline (instead of using `pi install`) because it is bind-mounted
+# from the host at container start, which would overwrite any changes made by `pi install`
+# during the build layer.  The npm packages are installed under ~/.pi/agent/npm/
+# and their entries are baked into settings.json inside the image.
+RUN mkdir -p /root/.pi/agent/npm \
+  && cd /root/.pi/agent/npm \
+  && echo '{"name":"pi-extensions","private":true}' > package.json \
+  && npm install --legacy-peer-deps pi-venice@latest pi-subagents@latest pi-web-access@latest \
+  && PI_VERSION=$(node -p "require('/usr/local/lib/node_modules/@earendil-works/pi-coding-agent/package.json').version") \
+  && cat > /root/.pi/agent/settings.json << SETTINGS_EOF
+{
+  "lastChangelogVersion": "${PI_VERSION}",
+  "defaultProvider": "llamaswap",
+  "defaultModel": "qwen3.6-35b-a3b-instruct-general",
+  "defaultThinkingLevel": "medium",
+  "packages": [
+    "npm:pi-venice",
+    "npm:pi-subagents",
+    "npm:pi-web-access"
+  ],
+  "theme": "dark"
+}
+SETTINGS_EOF
 
 # Install RTK (Rust Token Killer) for token-optimized command outputs
 # The install script resolves the latest release version automatically.
