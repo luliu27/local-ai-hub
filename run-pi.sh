@@ -8,7 +8,7 @@
 
 set -euo pipefail
 
-MODEL_CONFIG="$PWD/configs/pi-docker-models.json"
+MODEL_CONFIG="$HOME/.pi/agent/docker-models.json"
 AUTH_DIR="$HOME/.pi/agent/auth.json"
 SESSIONS_DIR="$HOME/.pi/agent/sessions"
 SKILLS_DIR=""
