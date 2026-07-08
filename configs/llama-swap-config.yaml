@@ -242,13 +242,14 @@ models:
       - "qwen3.6-35b-a3b-instruct-reasoning"
     ttl: 0
 
-  gemma4-31b:
+  gemma4-12b:
     cmd: >
       ${llama_server_bin} --port ${PORT}
-      -hf unsloth/gemma-4-31B-it-GGUF:UD-Q4_K_XL
-      --ctx-size 32000
+      -hf unsloth/gemma-4-12b-it-GGUF:UD-Q4_K_XL
+      --ctx-size ${default_ctx}
       --threads ${threads}
       ${cache_prompt} -ub ${ub}
+      ${jinja}
       --reasoning off
       --repeat-penalty ${repeat_penalty}
       --presence_penalty ${presence_penalty}
@@ -256,10 +257,10 @@ models:
       --top-p 0.95
       --top-k 64
       -ngl all
-    useModelName: "gemma4-31b"
+    useModelName: "gemma4-12b"
     aliases:
-      - "gemma-4-31b"
-      - "gemma4-31b"
+      - "gemma-4-12b"
+      - "gemma4-12b"
     ttl: 0
 
   gemma4-e4b:
@@ -321,8 +322,8 @@ groups:
       - "qwen3.6-35b-a3b-thinking-coding"
       - "qwen3.6-35b-a3b-instruct-general"
       - "qwen3.6-35b-a3b-instruct-reasoning"
+      - "gemma-4-12b"
       - "gpt-oss-20b"
-      - "gemma4-31b"
 
 # 
 # Optional: API keys to restrict access to the proxy endpoints
