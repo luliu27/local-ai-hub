@@ -46,6 +46,13 @@ RUN mkdir -p /root/.pi/agent/skills /root/.pi/agent/npm \
 }
 SETTINGS_EOF
 
+RUN mkdir -p /root/.pi \
+  && cat > /root/.pi/web-search.json << WEBSEARCH_EOF
+{
+  "workflow": "auto-summary"
+}
+WEBSEARCH_EOF
+
 # Install RTK (Rust Token Killer) for token-optimized command outputs
 # The install script resolves the latest release version automatically.
 # Pin to a specific version by setting RTK_VERSION (e.g., RTK_VERSION=0.42.4)
