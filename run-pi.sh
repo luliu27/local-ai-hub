@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Usage: run-pi.sh [--auth path/to/auth.json] [--sessions path/to/sessions] [--skills /path/to/skills]
+# Usage: run-pi.sh [--auth path/to/auth.json] [--sessions path/to/sessions] [--skills /path/to/skills] [--model-conf path/to/model-config.json]
 #
 # Options:
-#   --auth     path/to/auth.json          Path to auth.json (default: ~/.pi/agent/auth.json)
-#   --sessions path/to/sessions           Path to sessions directory (default: ~/.pi/agent/sessions)
-#   --skills /path/to/skills             Mount a local skills directory into the container
+#   --auth         path/to/auth.json          Path to auth.json (default: ~/.pi/agent/auth.json)
+#   --sessions     path/to/sessions           Path to sessions directory (default: ~/.pi/agent/sessions)
+#   --skills       /path/to/skills             Mount a local skills directory into the container
+#   --model-conf   path/to/model-config.json  Path to model config file (default: ~/.pi/agent/docker-models.json)
 
 set -euo pipefail
 
@@ -12,6 +13,7 @@ MODEL_CONFIG="$HOME/.pi/agent/docker-models.json"
 AUTH_DIR="$HOME/.pi/agent/auth.json"
 SESSIONS_DIR="$HOME/.pi/agent/sessions"
 SKILLS_DIR=""
+MODEL_CONF_PATH=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -39,22 +41,56 @@ while [[ $# -gt 0 ]]; do
       SKILLS_DIR="$2"
       shift 2
       ;;
+    --model-conf)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --model-conf requires a path argument" >&2
+        exit 1
+      fi
+      MODEL_CONF_PATH="$2"
+      shift 2
+      ;;
     *)
-      echo "Error: unknown argument '$1'. Usage: $0 [--auth /path/to/auth.json] [--sessions /path/to/sessions] [--skills /path/to/skills]" >&2
+      echo "Error: unknown argument '$1'. Usage: $0 [--auth /path/to/auth.json] [--sessions /path/to/sessions] [--skills /path/to/skills] [--model-conf /path/to/model-config.json]" >&2
       exit 1
       ;;
   esac
 done
+
+# Resolve paths to absolute paths
+AUTH_DIR="$(readlink -f "$AUTH_DIR")"
+SESSIONS_DIR="$(readlink -f "$SESSIONS_DIR")"
+if [[ -n "$SKILLS_DIR" ]]; then
+  SKILLS_DIR="$(readlink -f "$SKILLS_DIR")"
+fi
+
+# Determine model config file
+if [[ -n "$MODEL_CONF_PATH" ]]; then
+  MODEL_FILE="$(readlink -f "$MODEL_CONF_PATH")"
+else
+  MODEL_FILE="$(readlink -f "$MODEL_CONFIG")"
+fi
+
+# Validate existence of critical files/directories
+if [[ ! -f "$AUTH_DIR" ]]; then
+  echo "Error: Auth file '$AUTH_DIR' not found." >&2
+  exit 1
+fi
+
+if [[ ! -d "$SESSIONS_DIR" ]]; then
+  echo "Error: Sessions directory '$SESSIONS_DIR' not found." >&2
+  exit 1
+fi
+
+if [[ ! -f "$MODEL_FILE" ]]; then
+  echo "Error: Model config file '$MODEL_FILE' not found." >&2
+  exit 1
+fi
 
 # Build the docker run command
 CMD=(docker run -it --rm)
 
 # Mount individual skill symlinks if --skills is specified
 if [[ -n "$SKILLS_DIR" ]]; then
-  if [[ ! -d "$SKILLS_DIR" ]]; then
-    echo "Error: skills directory '$SKILLS_DIR' does not exist" >&2
-    exit 1
-  fi
   for skill_link in "$SKILLS_DIR"/*/; do
     # Skip if glob didn't match anything
     [[ -e "$skill_link" ]] || continue
@@ -64,12 +100,12 @@ if [[ -n "$SKILLS_DIR" ]]; then
   done
 fi
 
-# Common bind mounts (from Dockerfile usage comments)
+# Common bind mounts
 CMD+=(
-  -v "${MODEL_CONFIG}:/root/.pi/agent/models.json"
   -v "${AUTH_DIR}:/root/.pi/agent/auth.json"
   -v "${SESSIONS_DIR}:/root/.pi/agent/sessions"
   -v "$PWD:/workspace"
+  -v "${MODEL_FILE}:/root/.pi/agent/models.json"
 )
 
 CMD+=(pi-sandbox)
