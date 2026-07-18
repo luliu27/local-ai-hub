@@ -16,6 +16,10 @@
 				{
 					"id": "qwen3.6-35b-a3b-instruct-general",
 					"name": "Qwen 3.6 35B A3B instruct general"
+				},
+				{
+					"id": "gemma4-26B-A4B-qat",
+					"name": "Gemma 4 26B A4B QAT"
 				}
 			]
 		}
