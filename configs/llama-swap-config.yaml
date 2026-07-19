@@ -283,10 +283,10 @@ models:
       - "gemma4-e4b"
     ttl: 0
 
-  gemma4-26B-A4B-qat:
+  gemma4-26B-A4B:
     cmd: >
       ${llama_server_bin} --port ${PORT}
-      -hf unsloth/gemma-4-26B-A4B-it-qat-GGUF:UD-Q4_K_XL
+      -hf unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_XL
       --ctx-size ${default_ctx}
       --threads ${threads}
       ${cache_prompt} -ub ${ub}
@@ -297,10 +297,10 @@ models:
       --top-p 0.95
       --top-k 64
       -ngl all
-    useModelName: "gemma4-26B-A4B-qat"
+    useModelName: "gemma4-26B-A4B"
     aliases:
-      - "gemma-4-26b-a4b-qat"
-      - "gemma4-26b-a4b-qat"
+      - "gemma-4-26b-a4b"
+      - "gemma4-26b-a4b"
     ttl: 0
 
   gpt-oss-20b:
@@ -342,7 +342,9 @@ groups:
       - "qwen3.6-35b-a3b-thinking-coding"
       - "qwen3.6-35b-a3b-instruct-general"
       - "qwen3.6-35b-a3b-instruct-reasoning"
-      - "gemma-4-12b"
+      - "gemma4-12b"
+      - "gemma4-e4b"
+      - "gemma4-26B-A4B"
       - "gpt-oss-20b"
 
 # 

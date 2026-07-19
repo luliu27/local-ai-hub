@@ -10,16 +10,52 @@
 					"name": "Qwen 3.5 2B"
 				},
 				{
+					"id": "qwen3.5-9b",
+					"name": "Qwen 3.5 9B"
+				},
+				{
+					"id": "qwen3.6-27b",
+					"name": "Qwen 3.6 27B"
+				},
+				{
+					"id": "qwen3.6-27b-thinking",
+					"name": "Qwen 3.6 27B Thinking"
+				},
+				{
 					"id": "qwen3.6-27b-coding",
-					"name": "Qwen 3.6 27B coding"
+					"name": "Qwen 3.6 27B Coding"
+				},
+				{
+					"id": "qwen3.6-35b-a3b-thinking-general",
+					"name": "Qwen 3.6 35B A3B Thinking General"
+				},
+				{
+					"id": "qwen3.6-35b-a3b-thinking-coding",
+					"name": "Qwen 3.6 35B A3B Thinking Coding"
 				},
 				{
 					"id": "qwen3.6-35b-a3b-instruct-general",
-					"name": "Qwen 3.6 35B A3B instruct general"
+					"name": "Qwen 3.6 35B A3B Instruct General"
 				},
 				{
-					"id": "gemma4-26B-A4B-qat",
-					"name": "Gemma 4 26B A4B QAT"
+					"id": "qwen3.6-35b-a3b-instruct-reasoning",
+					"name": "Qwen 3.6 35B A3B Instruct Reasoning"
+				},
+				{
+					"id": "gemma4-12b",
+					"name": "Gemma 4 12B"
+				},
+				{
+					"id": "gemma4-e4b",
+					"name": "Gemma 4 E4B"
+				},
+				{
+					"id": "gemma4-26B-A4B",
+					"name": "Gemma 4 26B A4B"
+				},
+				{
+					"id": "gpt-oss-20b",
+					"name": "GPT OSS 20B"
 				}
 			]
 		}
