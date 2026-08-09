@@ -16,7 +16,7 @@
 FROM node:24-trixie-slim
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends bash ca-certificates curl fd-find git ripgrep \
+  && apt-get install -y --no-install-recommends bash ca-certificates curl fd-find git python3 ripgrep \
   && ln -s $(which fdfind) /usr/local/bin/fd \
   && rm -rf /var/lib/apt/lists/*
 RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
@@ -29,7 +29,7 @@ RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 RUN mkdir -p /root/.pi/agent/skills /root/.pi/agent/npm \
   && cd /root/.pi/agent/npm \
   && echo '{"name":"pi-extensions","private":true}' > package.json \
-  && npm install --legacy-peer-deps pi-venice@latest pi-subagents@latest pi-web-access@latest \
+  && npm install --legacy-peer-deps pi-venice@latest pi-subagents@latest pi-web-access@latest opencode-engram-learning@latest \
   && PI_VERSION=$(node -p "require('/usr/local/lib/node_modules/@earendil-works/pi-coding-agent/package.json').version") \
   && cat > /root/.pi/agent/settings.json << SETTINGS_EOF
 {
@@ -40,7 +40,8 @@ RUN mkdir -p /root/.pi/agent/skills /root/.pi/agent/npm \
   "packages": [
     "npm:pi-venice",
     "npm:pi-subagents",
-    "npm:pi-web-access"
+    "npm:pi-web-access",
+    "npm:opencode-engram-learning"
   ],
   "theme": "dark"
 }

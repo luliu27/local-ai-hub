@@ -14,7 +14,7 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 │   └── web-to-epub/
 ├── Dockerfile.pi       # pi-sandbox container image definition
 ├── llamaswap.sh        # llama-swap proxy lifecycle script
-├── run-pi.sh           # Docker sandbox launcher with --auth, --sessions, --skills, and --model-conf options
+├── run-pi.sh           # Docker sandbox launcher with --auth, --sessions, --skills, --model-conf, and --learning options
 ├── .gitignore
 └── README.md
 ```
@@ -116,6 +116,26 @@ docker build -f Dockerfile.pi -t pi-sandbox .
 
 The container's `ENTRYPOINT` is `pi`, so everything runs as a pi session. Connects to the local llama-swap proxy at `127.0.0.1:1235/v1` by default.
 
+#### Learning Mode
+
+For dedicated learning sessions with persistent learning data:
+
+```bash
+# Add to ~/.zshrc (or ~/.bashrc):
+pi-learner() {
+    "$HOME/workspace/projects/local-ai-hub/run-pi.sh" \
+        --model-conf "$HOME/workspace/projects/local-ai-hub/configs/pi-docker-models.json" \
+        --learning "$PWD"
+}
+
+# Then:
+source ~/.zshrc
+cd /path/to/learning/project
+pi-learner
+```
+
+This mounts the current directory as a learning data volume at `/root/.claude/learning` inside the container.
+
 ### Options
 
 | Option | Default | Description |
@@ -124,6 +144,7 @@ The container's `ENTRYPOINT` is `pi`, so everything runs as a pi session. Connec
 | `--sessions /path/to/sessions` | `$HOME/.pi/agent/sessions` | Path to persistent session history |
 | `--skills /path/to/skills` | _(none)_ | Mount external skills into the container |
 | `--model-conf /path/to/model-config.json` | `$HOME/.pi/agent/docker-models.json` | Path to custom model configuration file |
+| `--learning /path/to/learning` | _(none)_ | Mount a local learning data directory at `/root/.claude/learning` |
 
 ### Overriding Skills at Runtime
 
@@ -150,6 +171,7 @@ This symlinks each subdirectory under `/path/to/skills/` into `/root/.pi/agent/s
 | `--auth` (default: `$HOME/.pi/agent/auth.json`) | `/root/.pi/agent/auth.json` | API auth credentials for provider access |
 | `--sessions` (default: `$HOME/.pi/agent/sessions`) | `/root/.pi/agent/sessions` | Persistent pi session history across runs |
 | `$PWD` | `/workspace` | Working directory — where `pi` operates |
+| `--learning /path/to/learning` | `/root/.claude/learning` | Learning data directory for persistent study materials |
 
 > **Note:** `settings.json` is baked into the image at build time. To change packages or provider defaults, rebuild the Dockerfile. Auth, model cache, and sessions are overridable via bind mounts.
 

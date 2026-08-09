@@ -1,11 +1,23 @@
 #!/usr/bin/env bash
-# Usage: run-pi.sh [--auth path/to/auth.json] [--sessions path/to/sessions] [--skills /path/to/skills] [--model-conf path/to/model-config.json]
+# Usage: run-pi.sh [--auth path/to/auth.json] [--sessions path/to/sessions] [--skills /path/to/skills] [--model-conf path/to/model-config.json] [--learning path/to/learning]
 #
 # Options:
 #   --auth         path/to/auth.json          Path to auth.json (default: ~/.pi/agent/auth.json)
 #   --sessions     path/to/sessions           Path to sessions directory (default: ~/.pi/agent/sessions)
 #   --skills       /path/to/skills             Mount a local skills directory into the container
 #   --model-conf   path/to/model-config.json  Path to model config file (default: ~/.pi/agent/docker-models.json)
+#   --learning     path/to/learning           Mount a local learning data directory at /root/.claude/learning
+#
+# To set up a dedicated command for learning, add the following to your ~/.zshrc (or ~/.bashrc):
+#
+#   pi-learner() {
+#       "$HOME/workspace/projects/local-ai-hub/run-pi.sh" \
+#           --model-conf "$HOME/workspace/projects/local-ai-hub/configs/pi-docker-models.json" \
+#           --learning "$PWD"
+#   }
+#
+# Then run: source ~/.zshrc (or ~/.bashrc)
+# Usage: cd into a learning project directory and run: pi-learner
 
 set -euo pipefail
 
@@ -14,6 +26,7 @@ AUTH_DIR="$HOME/.pi/agent/auth.json"
 SESSIONS_DIR="$HOME/.pi/agent/sessions"
 SKILLS_DIR=""
 MODEL_CONF_PATH=""
+LEARNING_DIR=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -49,6 +62,14 @@ while [[ $# -gt 0 ]]; do
       MODEL_CONF_PATH="$2"
       shift 2
       ;;
+    --learning)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --learning requires a path argument" >&2
+        exit 1
+      fi
+      LEARNING_DIR="$2"
+      shift 2
+      ;;
     *)
       echo "Error: unknown argument '$1'. Usage: $0 [--auth /path/to/auth.json] [--sessions /path/to/sessions] [--skills /path/to/skills] [--model-conf /path/to/model-config.json]" >&2
       exit 1
@@ -61,6 +82,9 @@ AUTH_DIR="$(readlink -f "$AUTH_DIR")"
 SESSIONS_DIR="$(readlink -f "$SESSIONS_DIR")"
 if [[ -n "$SKILLS_DIR" ]]; then
   SKILLS_DIR="$(readlink -f "$SKILLS_DIR")"
+fi
+if [[ -n "$LEARNING_DIR" ]]; then
+  LEARNING_DIR="$(readlink -f "$LEARNING_DIR")"
 fi
 
 # Determine model config file
@@ -107,6 +131,11 @@ CMD+=(
   -v "$PWD:/workspace"
   -v "${MODEL_FILE}:/root/.pi/agent/models.json"
 )
+
+# Optional learning data mount
+if [[ -n "$LEARNING_DIR" ]]; then
+  CMD+=(-v "${LEARNING_DIR}:/root/.claude/learning")
+fi
 
 CMD+=(pi-sandbox)
 
