@@ -1,17 +1,7 @@
-# Usage:
-#   docker run -it --rm \
-#     -v "$PWD/configs/pi-docker-models.json:/root/.pi/agent/models.json" \
-#     -v ~/.pi/agent/auth.json:/root/.pi/agent/auth.json \
-#     -v ~/.pi/agent/sessions:/root/.pi/agent/sessions \
-#     -v "$PWD:/workspace" \
-#     pi-sandbox
-#
-# Note: settings.json is baked into the image. To customize packages,
-# edit the Dockerfile and rebuild. Other config (models, auth) can still
-# be overridden via bind mounts.
+# Base image: lean pi-sandbox without heavyweight extensions.
 #
 # Build:
-#   docker build -f Dockerfile.pi -t pi-sandbox .
+#   docker build -f Dockerfile.pi.base -t pi-sandbox:base .
 
 FROM node:24-trixie-slim
 

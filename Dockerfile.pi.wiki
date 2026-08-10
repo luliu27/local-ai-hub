@@ -1,0 +1,24 @@
+# Extended image: pi-sandbox with the LLM Wiki extension (heavyweight context).
+#
+# Build:
+#   docker build -f Dockerfile.pi.wiki -t pi-sandbox:wiki .
+#
+# Run:
+#   docker run -it --rm \
+#     -v "$PWD/configs/pi-docker-models.json:/root/.pi/agent/models.json" \
+#     -v ~/.pi/agent/auth.json:/root/.pi/agent/auth.json \
+#     -v ~/.pi/agent/sessions:/root/.pi/agent/sessions \
+#     -v "$PWD:/workspace" \
+#     pi-sandbox:wiki
+
+FROM pi-sandbox:base
+
+RUN cd /root/.pi/agent/npm \
+  && npm install --legacy-peer-deps pi-llm-wiki@latest
+
+# Add the extension to settings.json packages array
+RUN node -e "\
+  const s = JSON.parse(require('fs').readFileSync('/root/.pi/agent/settings.json','utf8')); \
+  s.packages.push('npm:pi-llm-wiki'); \
+  require('fs').writeFileSync('/root/.pi/agent/settings.json', JSON.stringify(s, null, 2) + '\\n');\
+"

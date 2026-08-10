@@ -137,7 +137,7 @@ if [[ -n "$LEARNING_DIR" ]]; then
   CMD+=(-v "${LEARNING_DIR}:/root/.claude/learning")
 fi
 
-CMD+=(pi-sandbox)
+CMD+=(pi-sandbox:base)
 
 echo "Running: ${CMD[*]}"
 exec "${CMD[@]}"
