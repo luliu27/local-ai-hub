@@ -1,0 +1,27 @@
+# Extended image: pi-sandbox with coding extensions (pi-subagents + RTK).
+#
+# Build (directory builds default to pi-sandbox:base):
+#   docker build -f Dockerfile.pi.coding -t pi-sandbox:coding .
+#   docker build --build-arg BASE_IMAGE=pi-sandbox:base -f Dockerfile.pi.coding -t pi-sandbox:coding .
+
+ARG BASE_IMAGE=pi-sandbox:base
+FROM ${BASE_IMAGE}
+
+RUN mkdir -p /root/.pi/agent/npm \
+  && cd /root/.pi/agent/npm \
+  && npm install --legacy-peer-deps pi-subagents@latest
+
+# Add pi-subagents to settings.json packages array
+RUN node -e "\
+  const s = JSON.parse(require('fs').readFileSync('/root/.pi/agent/settings.json','utf8')); \
+  if (!s.packages.includes('npm:pi-subagents')) { s.packages.push('npm:pi-subagents'); }\
+  require('fs').writeFileSync('/root/.pi/agent/settings.json', JSON.stringify(s, null, 2) + '\\n');\
+"
+
+# Install RTK (Rust Token Killer) for token-optimized command outputs
+# The install script resolves the latest release version automatically.
+# Pin to a specific version by setting RTK_VERSION (e.g., RTK_VERSION=0.42.4)
+RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh \
+  && export PATH="/root/.local/bin:$PATH" \
+  && rtk init -g --agent pi
+ENV PATH="/root/.local/bin:$PATH"

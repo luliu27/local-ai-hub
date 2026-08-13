@@ -12,7 +12,9 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 ├── logs/               # llama-swap access/runtime logs
 ├── skills/             # Custom pi-coding-agent skills
 │   └── web-to-epub/
-├── Dockerfile.pi       # pi-sandbox container image definition
+├── Dockerfile.pi.base     # lean base image (pi-coding-agent + core tools)
+├── Dockerfile.pi.coding   # base + pi-subagents + RTK
+├── Dockerfile.pi.wiki     # base + opencode-engram-learning + pi-llm-wiki
 ├── llamaswap.sh        # llama-swap proxy lifecycle script
 ├── run-pi.sh           # Docker sandbox launcher with --auth, --sessions, --skills, --model-conf, and --learning options
 ├── .gitignore
@@ -83,29 +85,36 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
 ### Building
 
 ```bash
-docker build -f Dockerfile.pi -t pi-sandbox .
+# Build all images
+./build-docker.sh
+
+# Build individually
+./build-docker.sh base      # pi-sandbox:base (lean)
+./build-docker.sh coding    # pi-sandbox:coding (base + pi-subagents + RTK)
+./build-docker.sh wiki      # pi-sandbox:wiki (base + engram-learning + pi-llm-wiki)
 ```
 
-**What's baked in:**
+**Image hierarchy:**
 
-| Layer | Details |
+| Image | Layers |
 |-------|--------|
-| Base | `node:24-trixie-slim` + CLI tools (`git`, `ripgrep`, `fd-find`, `curl`) |
-| Core | `@earendil-works/pi-coding-agent` (global npm install) |
-| Packages | `pi-venice` (image/video), `pi-subagents` (multi-agent delegation), `pi-web-access` (web search/fetch) |
-| RTK | [Rust Token Killer](https://github.com/rtk-ai/rtk) — token-optimized bash command outputs, auto-initialized via `rtk init -g --agent pi` |
+| `pi-sandbox:base` | `node:24-trixie-slim` + CLI tools (`git`, `ripgrep`, `fd-find`, `curl`) + `@earendil-works/pi-coding-agent` + `pi-venice` + `pi-web-access` |
+| `pi-sandbox:coding` | Extends base + adds `pi-subagents` (multi-agent delegation) + [RTK](https://github.com/rtk-ai/rtk) (token-optimized command outputs) |
+| `pi-sandbox:wiki`   | Extends base + adds `opencode-engram-learning` + `pi-llm-wiki` |
 
-**Default pi config (`settings.json`):**
+**Base image `settings.json`:**
 
 ```jsonc
 {
   "defaultProvider": "llamaswap",
   "defaultModel": "qwen3.6-35b-a3b-instruct-general",
   "defaultThinkingLevel": "medium",
-  "packages": ["npm:pi-venice", "npm:pi-subagents", "npm:pi-web-access"],
+  "packages": ["npm:pi-venice", "npm:pi-web-access"],
   "theme": "dark"
 }
 ```
+
+Each derived image appends its additional packages to the base settings at build time.
 
 ### Running
 

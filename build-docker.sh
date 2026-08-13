@@ -2,41 +2,63 @@
 # Build all pi-sandbox Docker images.
 #
 # Usage:
-#   ./build-docker.sh          # build both base and wiki
-#   ./build-docker.sh base     # build only base
-#   ./build-docker.sh wiki     # build only wiki
+#   ./build-docker.sh                        # build all three
+#   ./build-docker.sh base|coding|wiki       # build only one
+#   ./build-docker.sh --no-cache             # bypass Docker layer cache
 #   ./build-docker.sh --help
 
 set -euo pipefail
+cd "$(dirname "$0")"
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+# Single source of truth for the image family.
+# Change this one line to rename every image; the ARG flow propagates it.
+IMAGE="pi-sandbox"
+BASE_TAG="${IMAGE}:base"
 
 BUILD_BASE=true
+BUILD_CODING=true
 BUILD_WIKI=true
 NO_CACHE=false
 
 for arg in "$@"; do
   case "$arg" in
-    base)        BUILD_WIKI=false ;;
-    wiki)        BUILD_BASE=false ;;
+    base)        BUILD_CODING=false; BUILD_WIKI=false ;;
+    wiki)        BUILD_BASE=false; BUILD_CODING=false ;;
+    coding)      BUILD_BASE=false; BUILD_WIKI=false ;;
     --no-cache)  NO_CACHE=true ;;
-    --help|-h)   echo "Usage: $0 [base|wiki] [--no-cache|--help]"; exit 0 ;;
-    *)           echo "Usage: $0 [base|wiki] [--no-cache|--help]"; exit 1 ;;
+    --help|-h)   echo "Usage: $0 [base|coding|wiki] [--no-cache|--help]"; exit 0 ;;
+    *)           echo "Usage: $0 [base|coding|wiki] [--no-cache|--help]"; exit 1 ;;
   esac
 done
 
+# Only add the flag when actually requested (${var:+} fires on any non-empty
+# value, including the string "false", which would bust the cache every build).
+# Plain string (not an array): empty-array expansion under `set -u` fails on
+# bash < 4.4, and --no-cache contains no spaces so unquoted use is safe.
+BUILD_OPTS=""
+$NO_CACHE && BUILD_OPTS="--no-cache"
+
 if $BUILD_BASE; then
-  echo "=== Building pi-sandbox:base ==="
-  docker build ${NO_CACHE:+'--no-cache'} -f Dockerfile.pi.base -t pi-sandbox:base .
+  echo "=== Building ${BASE_TAG} ==="
+  docker build $BUILD_OPTS -f Dockerfile.pi.base -t "$BASE_TAG" .
+fi
+
+if $BUILD_CODING; then
+  echo ""
+  echo "=== Building ${IMAGE}:coding ==="
+  docker build $BUILD_OPTS \
+    --build-arg BASE_IMAGE="$BASE_TAG" \
+    -f Dockerfile.pi.coding -t "${IMAGE}:coding" .
 fi
 
 if $BUILD_WIKI; then
   echo ""
-  echo "=== Building pi-sandbox:wiki ==="
-  docker build ${NO_CACHE:+'--no-cache'} -f Dockerfile.pi.wiki -t pi-sandbox:wiki .
+  echo "=== Building ${IMAGE}:wiki ==="
+  docker build $BUILD_OPTS \
+    --build-arg BASE_IMAGE="$BASE_TAG" \
+    -f Dockerfile.pi.wiki -t "${IMAGE}:wiki" .
 fi
 
 echo ""
 echo "Done. Images:"
-docker images pi-sandbox
+docker images "$IMAGE"

@@ -2,6 +2,10 @@
 #
 # Build:
 #   docker build -f Dockerfile.pi.base -t pi-sandbox:base .
+#
+# Used as the base for:
+#   Dockerfile.pi.coding  — adds pi-subagents + RTK
+#   Dockerfile.pi.wiki    — adds opencode-engram-learning + pi-llm-wiki
 
 FROM node:24-trixie-slim
 
@@ -19,7 +23,7 @@ RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 RUN mkdir -p /root/.pi/agent/skills /root/.pi/agent/npm \
   && cd /root/.pi/agent/npm \
   && echo '{"name":"pi-extensions","private":true}' > package.json \
-  && npm install --legacy-peer-deps pi-venice@latest pi-subagents@latest pi-web-access@latest opencode-engram-learning@latest \
+  && npm install --legacy-peer-deps pi-venice@latest pi-web-access@latest \
   && PI_VERSION=$(node -p "require('/usr/local/lib/node_modules/@earendil-works/pi-coding-agent/package.json').version") \
   && cat > /root/.pi/agent/settings.json << SETTINGS_EOF
 {
@@ -29,9 +33,7 @@ RUN mkdir -p /root/.pi/agent/skills /root/.pi/agent/npm \
   "defaultThinkingLevel": "medium",
   "packages": [
     "npm:pi-venice",
-    "npm:pi-subagents",
-    "npm:pi-web-access",
-    "npm:opencode-engram-learning"
+    "npm:pi-web-access"
   ],
   "theme": "dark"
 }
@@ -43,14 +45,6 @@ RUN mkdir -p /root/.pi \
   "workflow": "auto-summary"
 }
 WEBSEARCH_EOF
-
-# Install RTK (Rust Token Killer) for token-optimized command outputs
-# The install script resolves the latest release version automatically.
-# Pin to a specific version by setting RTK_VERSION (e.g., RTK_VERSION=0.42.4)
-RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh \
-  && export PATH="/root/.local/bin:$PATH" \
-  && rtk init -g --agent pi
-ENV PATH="/root/.local/bin:$PATH"
 
 WORKDIR /workspace
 ENTRYPOINT ["pi"]
