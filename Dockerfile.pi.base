@@ -5,7 +5,8 @@
 #
 # Used as the base for:
 #   Dockerfile.pi.coding  — adds pi-subagents + RTK
-#   Dockerfile.pi.wiki    — adds opencode-engram-learning + pi-llm-wiki
+#   Dockerfile.pi.wiki    — adds pi-llm-wiki
+#   Dockerfile.pi.learn   — adds opencode-engram-learning
 
 FROM node:24-trixie-slim
 

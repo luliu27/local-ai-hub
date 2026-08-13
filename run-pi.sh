@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
-# Usage: run-pi.sh [--auth path/to/auth.json] [--sessions path/to/sessions] [--skills /path/to/skills] [--model-conf path/to/model-config.json] [--learning path/to/learning]
+# Usage: run-pi.sh [--image base|coding|wiki|learn] [--auth path/to/auth.json] [--sessions path/to/sessions] [--skills /path/to/skills] [--model-conf path/to/model-config.json]
 #
 # Options:
+#   --image        base|coding|wiki|learn     Which pi-sandbox image to run (default: base)
+#                                             base: default, coding: dev tools, wiki: wiki, learn: learning
 #   --auth         path/to/auth.json          Path to auth.json (default: ~/.pi/agent/auth.json)
 #   --sessions     path/to/sessions           Path to sessions directory (default: ~/.pi/agent/sessions)
 #   --skills       /path/to/skills             Mount a local skills directory into the container
 #   --model-conf   path/to/model-config.json  Path to model config file (default: ~/.pi/agent/docker-models.json)
-#   --learning     path/to/learning           Mount a local learning data directory at /root/.claude/learning
+#
+# The learn image always mounts $PWD at /root/.claude/learning for the learning extension.
 #
 # To set up a dedicated command for learning, add the following to your ~/.zshrc (or ~/.bashrc):
 #
 #   pi-learner() {
 #       "$HOME/workspace/projects/local-ai-hub/run-pi.sh" \
-#           --model-conf "$HOME/workspace/projects/local-ai-hub/configs/pi-docker-models.json" \
-#           --learning "$PWD"
+#           --image learn \
+#           --model-conf "$HOME/workspace/projects/local-ai-hub/configs/pi-docker-models.json"
 #   }
 #
 # Then run: source ~/.zshrc (or ~/.bashrc)
@@ -26,7 +29,7 @@ AUTH_DIR="$HOME/.pi/agent/auth.json"
 SESSIONS_DIR="$HOME/.pi/agent/sessions"
 SKILLS_DIR=""
 MODEL_CONF_PATH=""
-LEARNING_DIR=""
+IMAGE_TAG="base"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -62,16 +65,19 @@ while [[ $# -gt 0 ]]; do
       MODEL_CONF_PATH="$2"
       shift 2
       ;;
-    --learning)
+    --image)
       if [[ -z "${2:-}" ]]; then
-        echo "Error: --learning requires a path argument" >&2
+        echo "Error: --image requires an argument (base|coding|wiki|learn)" >&2
         exit 1
       fi
-      LEARNING_DIR="$2"
+      case "$2" in
+        base|coding|wiki|learn) IMAGE_TAG="$2" ;;
+        *) echo "Error: unknown image '$2'. Allowed: base, coding, wiki, learn" >&2; exit 1 ;;
+      esac
       shift 2
       ;;
     *)
-      echo "Error: unknown argument '$1'. Usage: $0 [--auth /path/to/auth.json] [--sessions /path/to/sessions] [--skills /path/to/skills] [--model-conf /path/to/model-config.json]" >&2
+      echo "Error: unknown argument '$1'. Usage: $0 [--image base|coding|wiki|learn] [--auth /path/to/auth.json] [--sessions /path/to/sessions] [--skills /path/to/skills] [--model-conf /path/to/model-config.json]" >&2
       exit 1
       ;;
   esac
@@ -82,9 +88,6 @@ AUTH_DIR="$(readlink -f "$AUTH_DIR")"
 SESSIONS_DIR="$(readlink -f "$SESSIONS_DIR")"
 if [[ -n "$SKILLS_DIR" ]]; then
   SKILLS_DIR="$(readlink -f "$SKILLS_DIR")"
-fi
-if [[ -n "$LEARNING_DIR" ]]; then
-  LEARNING_DIR="$(readlink -f "$LEARNING_DIR")"
 fi
 
 # Determine model config file
@@ -132,12 +135,12 @@ CMD+=(
   -v "${MODEL_FILE}:/root/.pi/agent/models.json"
 )
 
-# Optional learning data mount
-if [[ -n "$LEARNING_DIR" ]]; then
-  CMD+=(-v "${LEARNING_DIR}:/root/.claude/learning")
+# The learn image always mounts $PWD as the learning data directory
+if [[ "$IMAGE_TAG" == "learn" ]]; then
+  CMD+=(-v "$PWD:/root/.claude/learning")
 fi
 
-CMD+=(pi-sandbox:base)
+CMD+=("pi-sandbox:${IMAGE_TAG}")
 
 echo "Running: ${CMD[*]}"
 exec "${CMD[@]}"

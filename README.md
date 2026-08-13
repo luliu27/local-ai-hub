@@ -14,7 +14,8 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 │   └── web-to-epub/
 ├── Dockerfile.pi.base     # lean base image (pi-coding-agent + core tools)
 ├── Dockerfile.pi.coding   # base + pi-subagents + RTK
-├── Dockerfile.pi.wiki     # base + opencode-engram-learning + pi-llm-wiki
+├── Dockerfile.pi.wiki     # base + pi-llm-wiki
+├── Dockerfile.pi.learn    # base + opencode-engram-learning
 ├── llamaswap.sh        # llama-swap proxy lifecycle script
 ├── run-pi.sh           # Docker sandbox launcher with --auth, --sessions, --skills, --model-conf, and --learning options
 ├── .gitignore
@@ -91,7 +92,8 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
 # Build individually
 ./build-docker.sh base      # pi-sandbox:base (lean)
 ./build-docker.sh coding    # pi-sandbox:coding (base + pi-subagents + RTK)
-./build-docker.sh wiki      # pi-sandbox:wiki (base + engram-learning + pi-llm-wiki)
+./build-docker.sh wiki      # pi-sandbox:wiki (base + pi-llm-wiki)
+./build-docker.sh learn     # pi-sandbox:learn (base + opencode-engram-learning)
 ```
 
 **Image hierarchy:**
@@ -100,7 +102,8 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
 |-------|--------|
 | `pi-sandbox:base` | `node:24-trixie-slim` + CLI tools (`git`, `ripgrep`, `fd-find`, `curl`) + `@earendil-works/pi-coding-agent` + `pi-venice` + `pi-web-access` |
 | `pi-sandbox:coding` | Extends base + adds `pi-subagents` (multi-agent delegation) + [RTK](https://github.com/rtk-ai/rtk) (token-optimized command outputs) |
-| `pi-sandbox:wiki`   | Extends base + adds `opencode-engram-learning` + `pi-llm-wiki` |
+| `pi-sandbox:wiki`   | Extends base + adds `pi-llm-wiki` (persistent markdown wiki) |
+| `pi-sandbox:learn`  | Extends base + adds `opencode-engram-learning` (FSRS spaced-repetition learning engine) |
 
 **Base image `settings.json`:**
 
@@ -127,14 +130,14 @@ The container's `ENTRYPOINT` is `pi`, so everything runs as a pi session. Connec
 
 #### Learning Mode
 
-For dedicated learning sessions with persistent learning data:
+For dedicated learning sessions with persistent learning data, run the `learn` image, which always mounts the current directory at `/root/.claude/learning` (engram's state directory):
 
 ```bash
 # Add to ~/.zshrc (or ~/.bashrc):
 pi-learner() {
     "$HOME/workspace/projects/local-ai-hub/run-pi.sh" \
-        --model-conf "$HOME/workspace/projects/local-ai-hub/configs/pi-docker-models.json" \
-        --learning "$PWD"
+        --image learn \
+        --model-conf "$HOME/workspace/projects/local-ai-hub/configs/pi-docker-models.json"
 }
 
 # Then:
@@ -143,7 +146,7 @@ cd /path/to/learning/project
 pi-learner
 ```
 
-This mounts the current directory as a learning data volume at `/root/.claude/learning` inside the container.
+The current directory is mounted as the learning data volume at `/root/.claude/learning` inside the container.
 
 ### Options
 
@@ -153,7 +156,7 @@ This mounts the current directory as a learning data volume at `/root/.claude/le
 | `--sessions /path/to/sessions` | `$HOME/.pi/agent/sessions` | Path to persistent session history |
 | `--skills /path/to/skills` | _(none)_ | Mount external skills into the container |
 | `--model-conf /path/to/model-config.json` | `$HOME/.pi/agent/docker-models.json` | Path to custom model configuration file |
-| `--learning /path/to/learning` | _(none)_ | Mount a local learning data directory at `/root/.claude/learning` |
+| `--image base\|coding\|wiki\|learn` | `base` | Which pi-sandbox image to run; `learn` mounts `$PWD` at `/root/.claude/learning` for persistent learning data |
 
 ### Overriding Skills at Runtime
 
@@ -180,7 +183,7 @@ This symlinks each subdirectory under `/path/to/skills/` into `/root/.pi/agent/s
 | `--auth` (default: `$HOME/.pi/agent/auth.json`) | `/root/.pi/agent/auth.json` | API auth credentials for provider access |
 | `--sessions` (default: `$HOME/.pi/agent/sessions`) | `/root/.pi/agent/sessions` | Persistent pi session history across runs |
 | `$PWD` | `/workspace` | Working directory — where `pi` operates |
-| `--learning /path/to/learning` | `/root/.claude/learning` | Learning data directory for persistent study materials |
+| `learn` image (`$PWD`) | `/root/.claude/learning` | Learning data directory for persistent study materials (engram state) |
 
 > **Note:** `settings.json` is baked into the image at build time. To change packages or provider defaults, rebuild the Dockerfile. Auth, model cache, and sessions are overridable via bind mounts.
 
