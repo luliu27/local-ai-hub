@@ -319,6 +319,24 @@ models:
       - "gpt-oss-20b"
     ttl: 0
 
+  muse-glimmer-30b:
+    cmd: >
+      ${llama_server_bin} --port ${PORT}
+      -hf unsloth/Muse-Glimmer-30B-GGUF:UD-Q4_K_XL
+      --ctx-size 131072
+      --threads ${threads}
+      ${cache_prompt} -ub ${ub}
+      --repeat-penalty ${repeat_penalty}
+      --presence_penalty ${presence_penalty}
+      --temp 1.0
+      --top-p 0.95
+      --top-k 64
+      -ngl all
+    useModelName: "muse-glimmer-30b"
+    aliases:
+      - "muse-glimmer-30b"
+    ttl: 0
+
 # Groups: control swapping behavior for sets of models
 groups:
   # Small always-on model that won't be unloaded when other models run
@@ -346,7 +364,7 @@ groups:
       - "gemma4-e4b"
       - "gemma4-26B-A4B"
       - "gpt-oss-20b"
-
+      - "muse-glimmer-30b"
 # 
 # Optional: API keys to restrict access to the proxy endpoints
 # apiKeys:
