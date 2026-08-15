@@ -13,14 +13,18 @@
 #
 # To set up a dedicated command for learning, add the following to your ~/.zshrc (or ~/.bashrc):
 #
-#   pi-learner() {
+#   pi-docker() {
+#       local img="${1:-base}"
+#       shift
 #       "$HOME/workspace/projects/local-ai-hub/run-pi.sh" \
-#           --image learn \
+#           --image "$img" \
 #           --model-conf "$HOME/workspace/projects/local-ai-hub/configs/pi-docker-models.json"
+#.          "$@"
 #   }
 #
 # Then run: source ~/.zshrc (or ~/.bashrc)
-# Usage: cd into a learning project directory and run: pi-learner
+# Usage: cd into a learning project directory and run: pi-docker learn
+# another usage: pi-docker coding --skills $HOME/.agents/skills
 
 set -euo pipefail
 
