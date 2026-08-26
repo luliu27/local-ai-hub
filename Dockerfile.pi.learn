@@ -7,13 +7,4 @@
 ARG BASE_IMAGE=pi-sandbox:base
 FROM ${BASE_IMAGE}
 
-RUN mkdir -p /root/.pi/agent/npm \
-  && cd /root/.pi/agent/npm \
-  && npm install --legacy-peer-deps opencode-engram-learning@latest
-
-# Add engram to settings.json packages array
-RUN node -e "\
-  const s = JSON.parse(require('fs').readFileSync('/root/.pi/agent/settings.json','utf8')); \
-  if (!s.packages.includes('npm:opencode-engram-learning')) { s.packages.push('npm:opencode-engram-learning'); }\
-  require('fs').writeFileSync('/root/.pi/agent/settings.json', JSON.stringify(s, null, 2) + '\\n');\
-"
+RUN pi install npm:opencode-engram-learning
