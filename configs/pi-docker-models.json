@@ -26,6 +26,14 @@
 					"name": "Qwen 3.6 27B Coding"
 				},
 				{
+					"id": "qwen3.8-27b-thinking",
+					"name": "Qwen 3.8 27B Thinking"
+				},
+				{
+					"id": "qwen3.8-27b-instruct",
+					"name": "Qwen 3.8 27B Instruct"
+				},
+				{
 					"id": "qwen3.6-35b-a3b-thinking-general",
 					"name": "Qwen 3.6 35B A3B Thinking General"
 				},
