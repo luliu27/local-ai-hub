@@ -7,7 +7,7 @@
 ARG BASE_IMAGE=pi-sandbox:base
 FROM ${BASE_IMAGE}
 
-RUN pi install npm:pi-subagents
+RUN pi install npm:@tintinweb/pi-subagents
 
 # Install RTK (Rust Token Killer) for token-optimized command outputs
 # The install script resolves the latest release version automatically.

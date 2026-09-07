@@ -9,16 +9,16 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 │   ├── llama-swap-config.yaml
 │   ├── opencode.jsonc
 │   └── pi-docker-models.json
-├── logs/               # llama-swap access/runtime logs
 ├── skills/             # Custom pi-coding-agent skills
 │   └── web-to-epub/
-├── Dockerfile.pi.base     # lean base image (pi-coding-agent + core tools)
-├── Dockerfile.pi.coding   # base + pi-subagents + RTK
-├── Dockerfile.pi.wiki     # base + pi-llm-wiki
-├── Dockerfile.pi.learn    # base + opencode-engram-learning
-├── llamaswap.sh        # llama-swap proxy lifecycle script
-├── run-pi.sh           # Docker sandbox launcher with --auth, --sessions, --skills, --model-conf, and --learning options
-├── .gitignore
+├── build-docker.sh       # Build script for all pi-sandbox images (base|coding|wiki|learn)
+├── Dockerfile.pi.base    # lean base image (pi-coding-agent + core tools)
+├── Dockerfile.pi.coding  # base + @tintinweb/pi-subagents + RTK
+├── Dockerfile.pi.wiki    # base + @zosmaai/pi-llm-wiki
+├── Dockerfile.pi.learn   # base + opencode-engram-learning
+├── llamaswap.sh          # llama-swap proxy lifecycle script
+├── run-pi.sh             # Docker sandbox launcher with --image, --auth, --sessions, --skills, and --model-conf options
+├── .gitignore            # Ignores .pi/ directory (subagent files)
 └── README.md
 ```
 
@@ -72,12 +72,15 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 | qwen3.6-35b-a3b-instruct-reasoning | unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q5_K_XL | large-models | off |
 | gemma4-12b | unsloth/gemma-4-12b-it-GGUF:UD-Q4_K_XL | large-models | off |
 | gemma4-e4b | unsloth/gemma-4-E4B-it-GGUF:UD-Q4_K_XL | large-models | off |
-| gemma4-26B-A4B-qat | unsloth/gemma-4-26B-A4B-it-qat-GGUF:UD-Q4_K_XL | large-models | on |
+| gemma4-26B-A4B | unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_XL | large-models | on |
 | gpt-oss-20b | unsloth/gpt-oss-20b-GGUF:F16 | large-models | — |
+| qwen3.8-27b-thinking | unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_XL | large-models | on |
+| qwen3.8-27b-instruct | unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_XL | large-models | off |
+| muse-glimmer-30b | unsloth/Muse-Glimmer-30B-GGUF:UD-Q4_K_XL | large-models | — |
 
 **Groups:**
 - **always-on** — qwen3.5-2b (`persistent: true`, never swapped out, not exclusive)
-- **large-models** — All other models (`swap: true`, `exclusive: true`, only one runs at a time, will unload the always-on model)
+- **large-models** — All other models (`swap: true`, `exclusive: true`, only one runs at a time, will unload the always-on model). Includes 17 models across Qwen 3.5/3.6/3.8, Gemma 4, GPT OSS, and Muse Glimmer families.
 
 ## Pi Sandbox Container
 
@@ -94,6 +97,9 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
 ./build-docker.sh coding    # pi-sandbox:coding (base + pi-subagents + RTK)
 ./build-docker.sh wiki      # pi-sandbox:wiki (base + pi-llm-wiki)
 ./build-docker.sh learn     # pi-sandbox:learn (base + opencode-engram-learning)
+
+# Bypass Docker layer cache
+./build-docker.sh --no-cache
 ```
 
 **Image hierarchy:**
@@ -101,8 +107,8 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
 | Image | Layers |
 |-------|--------|
 | `pi-sandbox:base` | `node:24-trixie-slim` + CLI tools (`git`, `ripgrep`, `fd-find`, `curl`) + `@earendil-works/pi-coding-agent` + `pi-venice` + `pi-web-access` |
-| `pi-sandbox:coding` | Extends base + adds `pi-subagents` (multi-agent delegation) + [RTK](https://github.com/rtk-ai/rtk) (token-optimized command outputs) |
-| `pi-sandbox:wiki`   | Extends base + adds `pi-llm-wiki` (persistent markdown wiki) |
+| `pi-sandbox:coding` | Extends base + adds `@tintinweb/pi-subagents` (multi-agent delegation) + [RTK](https://github.com/rtk-ai/rtk) (token-optimized command outputs) |
+| `pi-sandbox:wiki`   | Extends base + adds `@zosmaai/pi-llm-wiki` (persistent markdown wiki) |
 | `pi-sandbox:learn`  | Extends base + adds `opencode-engram-learning` (FSRS spaced-repetition learning engine) |
 
 **Base image `settings.json`:**
@@ -112,18 +118,21 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
   "defaultProvider": "llamaswap",
   "defaultModel": "qwen3.6-35b-a3b-instruct-general",
   "defaultThinkingLevel": "medium",
-  "packages": ["npm:pi-venice", "npm:pi-web-access"],
+  "packages": ["npm:pi-venice", "npm:pi-web-access", "npm:pi-blackhole"],
   "theme": "dark"
 }
 ```
 
-Each derived image appends its additional packages to the base settings at build time.
+Each derived image appends its additional packages to the base settings at build time via `pi install`. The base image uses `pi install` for all package management (instead of manual npm installs), making it easier to add or remove packages.
 
 ### Running
 
 ```bash
 # Standard — mounts ~/.pi config + workspace as /workspace
 ./run-pi.sh
+
+# Specify a custom image
+./run-pi.sh --image coding
 ```
 
 The container's `ENTRYPOINT` is `pi`, so everything runs as a pi session. Connects to the local llama-swap proxy at `127.0.0.1:1235/v1` by default.
@@ -152,11 +161,11 @@ The current directory is mounted as the learning data volume at `/root/.claude/l
 
 | Option | Default | Description |
 |--------|---------|-------------|
+| `--image base\|coding\|wiki\|learn` | `base` | Which pi-sandbox image to run; `learn` mounts `$PWD` at `/root/.claude/learning` for persistent learning data |
 | `--auth /path/to/auth.json` | `$HOME/.pi/agent/auth.json` | Path to API auth credentials |
 | `--sessions /path/to/sessions` | `$HOME/.pi/agent/sessions` | Path to persistent session history |
 | `--skills /path/to/skills` | _(none)_ | Mount external skills into the container |
 | `--model-conf /path/to/model-config.json` | `$HOME/.pi/agent/docker-models.json` | Path to custom model configuration file |
-| `--image base\|coding\|wiki\|learn` | `base` | Which pi-sandbox image to run; `learn` mounts `$PWD` at `/root/.claude/learning` for persistent learning data |
 
 ### Overriding Skills at Runtime
 

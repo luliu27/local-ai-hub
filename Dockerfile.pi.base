@@ -35,7 +35,7 @@ const settings = {
 };
 fs.writeFileSync("/root/.pi/agent/settings.json", JSON.stringify(settings, null, 2) + "\n");
 NODE
-RUN pi install npm:pi-venice && pi install npm:pi-web-access
+RUN pi install npm:pi-venice && pi install npm:pi-web-access && pi install npm:pi-blackhole
 
 RUN mkdir -p /root/.pi \
   && cat > /root/.pi/web-search.json << WEBSEARCH_EOF
