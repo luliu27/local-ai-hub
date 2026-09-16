@@ -44,6 +44,7 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 | `configs/llama-swap-config.yaml` | Model definitions, groups, macros, and llama-server launch commands |
 | `configs/opencode.jsonc` | Opencode provider config pointing to the proxy at `127.0.0.1:1235/v1`, lists available models for opencode |
 | `configs/pi-docker-models.json` | Docker sandbox model provider config (default model selection) |
+| `configs/pi-blackhole-config.json` | Blackhole compaction engine settings — token budgets, observation/reflection pools, dropper thresholds, and compaction strategy |
 
 **Global macros:**
 
@@ -106,7 +107,7 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
 
 | Image | Layers |
 |-------|--------|
-| `pi-sandbox:base` | `node:24-trixie-slim` + CLI tools (`git`, `ripgrep`, `fd-find`, `curl`) + `@earendil-works/pi-coding-agent` + `pi-venice` + `pi-web-access` |
+| `pi-sandbox:base` | `node:24-trixie-slim` + CLI tools (`git`, `ripgrep`, `fd-find`, `curl`) + `build-essential` (native compilation) + `@earendil-works/pi-coding-agent` + `pi-venice` + `pi-web-access` |
 | `pi-sandbox:coding` | Extends base + adds `@tintinweb/pi-subagents` (multi-agent delegation) + [RTK](https://github.com/rtk-ai/rtk) (token-optimized command outputs) |
 | `pi-sandbox:wiki`   | Extends base + adds `@zosmaai/pi-llm-wiki` (persistent markdown wiki) |
 | `pi-sandbox:learn`  | Extends base + adds `opencode-engram-learning` (FSRS spaced-repetition learning engine) |
@@ -124,6 +125,29 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
 ```
 
 Each derived image appends its additional packages to the base settings at build time via `pi install`. The base image uses `pi install` for all package management (instead of manual npm installs), making it easier to add or remove packages.
+
+**Blackhole Compaction Engine:**
+
+The `pi-blackhole` package provides an advanced context compaction engine with configurable token budgets, observation/reflection pools, and a dropper mechanism for memory pressure. Configuration lives in `configs/pi-blackhole-config.json`:
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `compactionEngine` | `blackhole` | Selects the blackhole compaction strategy |
+| `compactionSummaryMode` | `default` | Summary generation mode |
+| `tailBehavior` | `minimal` | How much context to retain after compaction |
+| `compactAfterTokens` | 81,000 | Trigger compaction when tokens exceed this threshold |
+| `observeAfterTokens` | 15,000 | Begin observing context usage past this point |
+| `reflectAfterTokens` | 25,000 | Begin reflecting on context pressure past this point |
+| `observationsPoolMaxTokens` | 20,000 | Maximum tokens for the observations pool |
+| `observationsPoolTargetTokens` | 10,000 | Target size for the observations pool |
+| `observerChunkMaxTokens` | 40,000 | Max tokens per observer chunk |
+| `reflectorInputMaxTokens` | 80,000 | Max tokens fed to the reflector |
+| `dropperInputMaxTokens` | 80,000 | Max tokens for dropper processing |
+| `dropperPressureThreshold` | 0.7 | Dropper activates when pressure exceeds this |
+| `dropperPoolFullnessThreshold` | 0.1 | Dropper triggers on pool fullness ratio |
+| `agentMaxTurns` | 16 | Maximum turns per agent invocation |
+| `memory` | `true` | Enable persistent memory across sessions |
+| `fullFoldAlways` | `true` | Always fold observations to their minimum representation |
 
 ### Running
 
