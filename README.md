@@ -11,10 +11,9 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 │   └── pi-docker-models.json
 ├── skills/             # Custom pi-coding-agent skills
 │   └── web-to-epub/
-├── build-docker.sh       # Build script for all pi-sandbox images (base|coding|wiki|learn)
+├── build-docker.sh       # Build script for all pi-sandbox images (base|coding|learn)
 ├── Dockerfile.pi.base    # lean base image (pi-coding-agent + core tools)
 ├── Dockerfile.pi.coding  # base + @tintinweb/pi-subagents + RTK
-├── Dockerfile.pi.wiki    # base + @zosmaai/pi-llm-wiki
 ├── Dockerfile.pi.learn   # base + opencode-engram-learning
 ├── llamaswap.sh          # llama-swap proxy lifecycle script
 ├── run-pi.sh             # Docker sandbox launcher with --image, --auth, --sessions, --skills, and --model-conf options
@@ -96,7 +95,7 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
 # Build individually
 ./build-docker.sh base      # pi-sandbox:base (lean)
 ./build-docker.sh coding    # pi-sandbox:coding (base + pi-subagents + RTK)
-./build-docker.sh wiki      # pi-sandbox:wiki (base + pi-llm-wiki)
+
 ./build-docker.sh learn     # pi-sandbox:learn (base + opencode-engram-learning)
 
 # Bypass Docker layer cache
@@ -109,7 +108,6 @@ A self-contained [pi-coding-agent](https://github.com/earendil-works/pi-coding-a
 |-------|--------|
 | `pi-sandbox:base` | `node:24-trixie-slim` + CLI tools (`git`, `ripgrep`, `fd-find`, `curl`) + `build-essential` (native compilation) + `@earendil-works/pi-coding-agent` + `pi-venice` + `pi-web-access` |
 | `pi-sandbox:coding` | Extends base + adds `@tintinweb/pi-subagents` (multi-agent delegation) + [RTK](https://github.com/rtk-ai/rtk) (token-optimized command outputs) |
-| `pi-sandbox:wiki`   | Extends base + adds `@zosmaai/pi-llm-wiki` (persistent markdown wiki) |
 | `pi-sandbox:learn`  | Extends base + adds `opencode-engram-learning` (FSRS spaced-repetition learning engine) |
 
 **Base image `settings.json`:**
@@ -185,7 +183,7 @@ The current directory is mounted as the learning data volume at `/root/.claude/l
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--image base\|coding\|wiki\|learn` | `base` | Which pi-sandbox image to run; `learn` mounts `$PWD` at `/root/.claude/learning` for persistent learning data |
+| `--image base\|coding\|learn` | `base` | Which pi-sandbox image to run; `learn` mounts `$PWD` at `/root/.claude/learning` for persistent learning data |
 | `--auth /path/to/auth.json` | `$HOME/.pi/agent/auth.json` | Path to API auth credentials |
 | `--sessions /path/to/sessions` | `$HOME/.pi/agent/sessions` | Path to persistent session history |
 | `--skills /path/to/skills` | _(none)_ | Mount external skills into the container |

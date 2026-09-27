@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Usage: run-pi.sh [--image base|coding|wiki|learn] [--auth path/to/auth.json] [--sessions path/to/sessions] [--skills /path/to/skills] [--model-conf path/to/model-config.json]
+# Usage: run-pi.sh [--image base|coding|learn] [--auth path/to/auth.json] [--sessions path/to/sessions] [--skills /path/to/skills] [--model-conf path/to/model-config.json]
 #
 # Options:
-#   --image        base|coding|wiki|learn     Which pi-sandbox image to run (default: base)
-#                                             base: default, coding: dev tools, wiki: wiki, learn: learning
+#   --image        base|coding|learn     Which pi-sandbox image to run (default: base)
+#                                        base: default, coding: dev tools, learn: learning
 #   --auth         path/to/auth.json          Path to auth.json (default: ~/.pi/agent/auth.json)
 #   --sessions     path/to/sessions           Path to sessions directory (default: ~/.pi/agent/sessions)
 #   --skills       /path/to/skills             Mount a local skills directory into the container
@@ -71,17 +71,17 @@ while [[ $# -gt 0 ]]; do
       ;;
     --image)
       if [[ -z "${2:-}" ]]; then
-        echo "Error: --image requires an argument (base|coding|wiki|learn)" >&2
+        echo "Error: --image requires an argument (base|coding|learn)" >&2
         exit 1
       fi
       case "$2" in
-        base|coding|wiki|learn) IMAGE_TAG="$2" ;;
-        *) echo "Error: unknown image '$2'. Allowed: base, coding, wiki, learn" >&2; exit 1 ;;
+        base|coding|learn) IMAGE_TAG="$2" ;;
+        *) echo "Error: unknown image '$2'. Allowed: base, coding, learn" >&2; exit 1 ;;
       esac
       shift 2
       ;;
     *)
-      echo "Error: unknown argument '$1'. Usage: $0 [--image base|coding|wiki|learn] [--auth /path/to/auth.json] [--sessions /path/to/sessions] [--skills /path/to/skills] [--model-conf /path/to/model-config.json]" >&2
+      echo "Error: unknown argument '$1'. Usage: $0 [--image base|coding|learn] [--auth /path/to/auth.json] [--sessions /path/to/sessions] [--skills /path/to/skills] [--model-conf /path/to/model-config.json]" >&2
       exit 1
       ;;
   esac
