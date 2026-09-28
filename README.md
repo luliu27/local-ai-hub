@@ -31,7 +31,7 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 ./llamaswap.sh {start|stop|restart|status}
 ```
 
-- **start** — Launch llama-swap proxy on `localhost:1235`
+- **start** — Launch llama-swap proxy on `127.0.0.1:1235` (loopback-only; clients authenticate with the key `llamaswap`)
 - **stop** — Kill the running proxy
 - **restart** — Stop then start
 - **status** — Check if proxy is running
@@ -73,6 +73,7 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 | gemma4-12b | unsloth/gemma-4-12b-it-GGUF:UD-Q4_K_XL | large-models | off |
 | gemma4-e4b | unsloth/gemma-4-E4B-it-GGUF:UD-Q4_K_XL | large-models | off |
 | gemma4-26B-A4B | unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_XL | large-models | on |
+| gemma4-31b | unsloth/gemma-4-31B-it-qat-GGUF:UD-Q4_K_XL | large-models | off |
 | gpt-oss-20b | unsloth/gpt-oss-20b-GGUF:F16 | large-models | — |
 | qwen3.8-27b-thinking | unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_XL | large-models | on |
 | qwen3.8-27b-instruct | unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_XL | large-models | off |
@@ -80,7 +81,7 @@ Local model management via llama-swap with opencode integration, Docker sandbox,
 
 **Groups:**
 - **always-on** — qwen3.5-2b (`persistent: true`, never swapped out, not exclusive)
-- **large-models** — All other models (`swap: true`, `exclusive: true`, only one runs at a time, will unload the always-on model). Includes 17 models across Qwen 3.5/3.6/3.8, Gemma 4, GPT OSS, and Muse Glimmer families.
+- **large-models** — All other models (`swap: true`, `exclusive: true`, only one runs at a time; the always-on model stays resident). Includes 18 models across Qwen 3.5/3.6/3.8, Gemma 4, GPT OSS, and Muse Glimmer families.
 
 ## Pi Sandbox Container
 

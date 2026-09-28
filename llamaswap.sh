@@ -61,7 +61,7 @@ start() {
     echo "Starting llama-swap..."
     nohup "$LLAMA_SWAP" \
         --config "$CONFIG" \
-        --listen 0.0.0.0:1235 \
+        --listen 127.0.0.1:1235 \
         >> "$LOG_FILE" \
         2>> "$ERROR_LOG_FILE" \
         < /dev/null &

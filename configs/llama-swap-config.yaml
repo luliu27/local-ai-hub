@@ -1,6 +1,6 @@
 # config.yaml
 # llama-swap configuration to run local llama-server models on demand.
-# to run llama-swap: `llama-swap --config config.yaml --listen 0.0.0.0:1235`
+# to run llama-swap: `llama-swap --config config.yaml --listen 127.0.0.1:1235`
 #
 # Models are stored in: ${HOME}/.cache/huggingface/hub
 # one way to download models: `llama-server -hf unsloth/gemma-4-E4B-it-GGUF:UD-Q4_K_XL`
@@ -9,7 +9,8 @@
 # `llama-server` command on a dynamically assigned ${PORT} and stop any other
 # running upstream so only one model is active at a time besides always-on models.
 
-# global server listen address (this doesn't seem to work properly)
+# global server listen address (note: the --listen CLI flag takes precedence
+# over this; llamaswap.sh passes --listen 127.0.0.1:1235 to stay loopback-only)
 listen: "localhost:1235"
 
 # Optional: enable watching the config file for hot reload (useful during testing)
@@ -54,6 +55,7 @@ models:
       --top-p 0.8
       --min-p 0.00
       --mirostat 0
+      -ngl all
     useModelName: "qwen3.5-2b"
     aliases:
       - "qwen-2b"
@@ -81,6 +83,7 @@ models:
       --top-p 0.8
       --min-p 0.00
       --mirostat 0
+      -ngl all
     useModelName: "qwen3.5-9b"
     aliases:
       - "qwen-9b"
@@ -161,7 +164,7 @@ models:
   qwen3.6-35b-a3b-thinking-general:
     cmd: >
       ${llama_server_bin} --port ${PORT}
-      -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q6_K_XL
+      -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q5_K_XL
       --ctx-size ${default_ctx}
       --threads ${threads}
       ${cache_prompt} -ub ${ub}
@@ -242,6 +245,30 @@ models:
       - "qwen3.6-35b-a3b-instruct-reasoning"
     ttl: 0
 
+  qwen3.6-35b-splash:
+    cmd: >
+      /opt/homebrew/bin/splash-m1 serve
+      --port ${PORT}
+      --model incoai/Qwen3.6-35B-A3B-Splash
+      --max-context 128k
+      --default-reasoning-effort medium
+    useModelName: "incoai/Qwen3.6-35B-A3B-Splash"
+    aliases:
+      - "qwen3.6-35b-splash"
+    ttl: 0
+
+  qwen3.8-27b-splash:
+    cmd: >
+      /opt/homebrew/bin/splash-m1 serve
+      --port ${PORT}
+      --model incoai/Qwen3.8-27B-Splash
+      --max-context 128k
+      --default-reasoning-effort medium
+    useModelName: "incoai/Qwen3.8-27B-Splash"
+    aliases:
+      - "qwen3.8-27b-splash"
+    ttl: 0
+
   gemma4-12b:
     cmd: >
       ${llama_server_bin} --port ${PORT}
@@ -301,6 +328,27 @@ models:
     aliases:
       - "gemma-4-26b-a4b"
       - "gemma4-26b-a4b"
+    ttl: 0
+
+  gemma4-31b:
+    cmd: >
+      ${llama_server_bin} --port ${PORT}
+      -hf unsloth/gemma-4-31B-it-qat-GGUF:UD-Q4_K_XL
+      --ctx-size ${default_ctx}
+      --threads ${threads}
+      ${cache_prompt} -ub ${ub}
+      ${jinja}
+      --reasoning off
+      --repeat-penalty ${repeat_penalty}
+      --presence_penalty ${presence_penalty}
+      --temp 1.0
+      --top-p 0.95
+      --top-k 64
+      -ngl all
+    useModelName: "gemma4-31b"
+    aliases:
+      - "gemma-4-31b"
+      - "gemma4-31b"
     ttl: 0
 
   gpt-oss-20b:
@@ -390,7 +438,7 @@ groups:
     members:
       - "qwen3.5-2b"
 
-  # Large models - only one at a time, will unload the always-on model
+  # Large models - only one at a time; always-on models stay resident
   large-models:
     swap: true
     exclusive: true
@@ -406,15 +454,18 @@ groups:
       - "gemma4-12b"
       - "gemma4-e4b"
       - "gemma4-26B-A4B"
+      - "gemma4-31b"
       - "gpt-oss-20b"
       - "muse-glimmer-30b"
       - "qwen3.8-27b-thinking"
       - "qwen3.8-27b-instruct"
-# 
-# Optional: API keys to restrict access to the proxy endpoints
-# apiKeys:
-#   - "your-api-key-here"
+      - "qwen3.6-35b-splash"
+      - "qwen3.8-27b-splash"
+# API key required on all proxy endpoints. The same key is sent by
+# opencode.jsonc and pi-docker-models.json.
+apiKeys:
+  - "llamaswap"
 
-# Optional: settings you may want to tune in production
-# maxUpstreamStartTime: 60   # seconds to wait for upstream to start
+# Settings tuned for production
+maxUpstreamStartTime: 120  # seconds to wait for upstream to start (slow first loads)
 # logLevel: info
